@@ -2,7 +2,7 @@
 #include <linux/sched.h>   // For current and task_struct
 #include <linux/cred.h>    // For euid
 #include <linux/errno.h>
-
+#include <linux/kernel.h>
 
 long set_sec(int sword, int midnight, int clamp) {
     // Check for root privileges
