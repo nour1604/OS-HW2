@@ -1,10 +1,15 @@
 #include "hw2_test.h"
+#include <linux/sched.h>   // For current and task_struct
+#include <linux/cred.h>    // For euid
+#include <linux/errno.h>
+
 
 long set_sec(int sword, int midnight, int clamp) {
     // Check for root privileges
     if (current->cred->euid != 0) {
         return -EPERM;  // Operation not permitted if not root
     }
+
 
     // Validate arguments: Ensure they are non-negative
     if (sword < 0 || midnight < 0 || clamp < 0) {
@@ -79,7 +84,7 @@ long check_sec(pid_t pid, char clr) {
     }
 
     // Check the target process's clearance
-    if (target_task->clearance & required_bit) {
+    if (target_task.clearance & required_bit) {
         return 1;  // Target process has the clearance
     } else {
         return 0;  // Target process does not have the clearance
