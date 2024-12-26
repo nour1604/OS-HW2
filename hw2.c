@@ -1,8 +1,10 @@
-#include "hw2_test.h"
-#include <linux/sched.h>   // For current and task_struct
-#include <linux/cred.h>    // For euid
-#include <linux/errno.h>
+//
+// Created by nours on 26/12/2024.
+//
 #include <linux/kernel.h>
+#include <linux/list.h>
+#include <linux/sched.h>
+#include "hw2_test.h"
 
 long set_sec(int sword, int midnight, int clamp) {
     // Check for root privileges
