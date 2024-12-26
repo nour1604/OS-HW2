@@ -30,6 +30,7 @@ long set_sec(int sword, int midnight, int clamp) {
 long get_sec(char clr) {
     // Validate the input clearance character
     if (clr != 's' && clr != 'm' && clr != 'c') {
+        printf("Invalid clearance character: %c\n", clr);
         return -EINVAL;  // Invalid clearance character
     }
 
