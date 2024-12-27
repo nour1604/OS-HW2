@@ -1,6 +1,3 @@
-//
-// Created by nours on 26/12/2024.
-//
 #include <linux/kernel.h>
 #include <linux/list.h>
 #include <linux/sched.h>
