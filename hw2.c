@@ -1,6 +1,15 @@
 #include <linux/kernel.h>
-#include <linux/llist.h>
+#include <linux/syscalls.h>
+#include <linux/cred.h>
+#include <linux/uaccess.h>
+#include <linux/errno.h>
 #include <linux/sched.h>
+#include <linux/pid.h>
+#include <linux/module.h>
+
+
+
+
 
 long set_sec(int sword, int midnight, int clamp) {
     // Check for root privileges
