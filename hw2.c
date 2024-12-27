@@ -1,4 +1,5 @@
 #include <linux/kernel.h>
+#include <linux/llist.h>
 #include <linux/sched.h>
 
 long set_sec(int sword, int midnight, int clamp) {
