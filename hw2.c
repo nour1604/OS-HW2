@@ -18,7 +18,6 @@ long sys_set_sec(int sword, int midnight, int clamp) {
     if (!uid_eq(current->cred->euid, KUIDT_INIT(0))) {
         return -EPERM;  // Operation not permitted if not root
     }
-    cout << "testinggg " << endl;
     // Validate arguments: Ensure they are non-negative
     if (sword < 0 || midnight < 0 || clamp < 0) {
         return -EINVAL;  // Invalid argument
@@ -62,6 +61,13 @@ long sys_get_sec(char clr) {
 long sys_check_sec(pid_t pid, char clr) {
     struct task_struct *target_task;
     int required_bit;
+    target_task = pid_task(find_vpid(pid), PIDTYPE_PID);
+    if(kill(pid,SIGINFO)==-1){
+        return -ESRCH;
+    }
+    if (!target_task) {
+        return -ESRCH;  // No such process
+    }
 
     // Validate the clearance character
     if (clr != 's' && clr != 'm' && clr != 'c') {
@@ -86,13 +92,6 @@ long sys_check_sec(pid_t pid, char clr) {
     }
 
     // Find the task_struct for the target process by PID
-    target_task = pid_task(find_vpid(pid), PIDTYPE_PID);
-    if(kill(pid,SIGINFO)==-1){
-      return -ESRCH;
-    }
-    if (!target_task) {
-        return -ESRCH;  // No such process
-    }
 
     // Check the target process's clearance
     if (target_task->clearance & required_bit) {
@@ -135,7 +134,7 @@ long sys_set_sec_branch(int height, char clr) {
     }
 
     // Traverse up the parent hierarchy up to `height`
-    while (parent_task != NULL && height > 0) {
+   for(int i = 0; i < height; i++) {
         // Update the parent's clearance if the bit is not already set
         if (!(parent_task->clearance & required_bit)) {
             parent_task->clearance |= required_bit;
@@ -144,7 +143,6 @@ long sys_set_sec_branch(int height, char clr) {
 
         // Move to the next parent
         parent_task = parent_task->parent;
-        height--;
     }
 
     return updated_count;  // Return the number of parents updated
