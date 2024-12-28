@@ -63,19 +63,23 @@ long sys_get_sec(char clr) {
 long sys_check_sec(pid_t pid, char clr) {
     struct task_struct *target_task;
     int required_bit;
+    // Validate the clearance character
+    if (clr != 's' && clr != 'm' && clr != 'c') {
+        return -EINVAL;  // Invalid clearance character
+    }
+    if (pid < 0 )
+    {
+      return -ESRCH;
+    }
+
     struct pid *pid_struct;
     pid_struct = find_vpid(pid);
-    if (kill_pid(pid_struct, 0, NULL) < 0) {
-         return -ESRCH;
+	if(pid_struct == NULL){
+          return -ESRCH;
 	}
     target_task = pid_task(find_vpid(pid), PIDTYPE_PID);
     if (!target_task) {
         return -ESRCH;  // No such process
-    }
-
-    // Validate the clearance character
-    if (clr != 's' && clr != 'm' && clr != 'c') {
-        return -EINVAL;  // Invalid clearance character
     }
 
     // Check if the calling process has the requested clearance
@@ -108,7 +112,7 @@ long sys_check_sec(pid_t pid, char clr) {
 
 
 long sys_set_sec_branch(int height, char clr) {
-    struct task_struct *parent_task = current->parent;
+    struct task_struct *parent = current->real_parent;
     int required_bit;
     int updated_count = 0;
 
@@ -136,17 +140,18 @@ long sys_set_sec_branch(int height, char clr) {
     if (!(current->clearance & required_bit)) {
         return -EPERM;  // Calling process lacks the required clearance
     }
-    int i;
+
     // Traverse up the parent hierarchy up to `height`
-   for( i = 0; i < height; i++) {
+   while (height > 0 && parent->pid != 0) {
         // Update the parent's clearance if the bit is not already set
-        if (!(parent_task->clearance & required_bit)) {
-            parent_task->clearance |= required_bit;
+        if (!(parent->clearance & required_bit)) {
+            parent->clearance |= required_bit;
             updated_count++;
         }
+        height--;
 
         // Move to the next parent
-        parent_task = parent_task->parent;
+        parent = parent->real_parent;
     }
 
     return updated_count;  // Return the number of parents updated
