@@ -4,7 +4,9 @@
 #include <linux/capability.h>
 #include <linux/cred.h>
 #include <linux/syscalls.h>
-#include <stdio.h>
+#include <linux/signal.h>
+#include <linux/sched/signal.h>  // For signal-related functions
+#include <linux/pid.h>
 
 
 asmlinkage long sys_hello(void) {
@@ -61,10 +63,12 @@ long sys_get_sec(char clr) {
 long sys_check_sec(pid_t pid, char clr) {
     struct task_struct *target_task;
     int required_bit;
+    struct pid *pid_struct;
+    pid_struct = find_vpid(pid);
+    if (kill_pid(pid_struct, 0, NULL) < 0) {
+         return -ESRCH;
+	}
     target_task = pid_task(find_vpid(pid), PIDTYPE_PID);
-    if(kill(pid,SIGINFO)==-1){
-        return -ESRCH;
-    }
     if (!target_task) {
         return -ESRCH;  // No such process
     }
@@ -132,9 +136,9 @@ long sys_set_sec_branch(int height, char clr) {
     if (!(current->clearance & required_bit)) {
         return -EPERM;  // Calling process lacks the required clearance
     }
-
+    int i;
     // Traverse up the parent hierarchy up to `height`
-   for(int i = 0; i < height; i++) {
+   for( i = 0; i < height; i++) {
         // Update the parent's clearance if the bit is not already set
         if (!(parent_task->clearance & required_bit)) {
             parent_task->clearance |= required_bit;
