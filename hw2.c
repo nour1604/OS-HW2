@@ -1,11 +1,7 @@
 #include <linux/kernel.h>
-#include <linux/syscalls.h>
-#include <linux/cred.h>
-#include <linux/uaccess.h>
 #include <linux/errno.h>
 #include <linux/sched.h>
-#include <linux/pid.h>
-#include <linux/module.h>
+#include <linux/capability.h>
 
 
 
