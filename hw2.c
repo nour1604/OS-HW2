@@ -2,18 +2,23 @@
 #include <linux/errno.h>
 #include <linux/sched.h>
 #include <linux/capability.h>
+#include <linux/cred.h>
+#include <linux/syscalls.h>
+#include <stdio.h>
 
 
+asmlinkage long sys_hello(void) {
+    printk("Hello, World!\n");
+    return 0;
+}
 
 
-
-long set_sec(int sword, int midnight, int clamp) {
+long sys_set_sec(int sword, int midnight, int clamp) {
     // Check for root privileges
-    if (current->cred->euid != 0) {
+    if (!uid_eq(current->cred->euid, KUIDT_INIT(0))) {
         return -EPERM;  // Operation not permitted if not root
     }
-
-
+    cout << "testinggg " << endl;
     // Validate arguments: Ensure they are non-negative
     if (sword < 0 || midnight < 0 || clamp < 0) {
         return -EINVAL;  // Invalid argument
@@ -30,10 +35,9 @@ long set_sec(int sword, int midnight, int clamp) {
     return 0;  // Success
 }
 
-long get_sec(char clr) {
+long sys_get_sec(char clr) {
     // Validate the input clearance character
     if (clr != 's' && clr != 'm' && clr != 'c') {
-        printf("Invalid clearance character: %c\n", clr);
         return -EINVAL;  // Invalid clearance character
     }
 
@@ -51,10 +55,11 @@ long get_sec(char clr) {
         default:
             return -EINVAL;  // Should not reach here
     }
+    return 0;
 }
 
 
-long check_sec(pid_t pid, char clr) {
+long sys_check_sec(pid_t pid, char clr) {
     struct task_struct *target_task;
     int required_bit;
 
@@ -82,21 +87,24 @@ long check_sec(pid_t pid, char clr) {
 
     // Find the task_struct for the target process by PID
     target_task = pid_task(find_vpid(pid), PIDTYPE_PID);
-
+    if(kill(pid,SIGINFO)==-1){
+      return -ESRCH;
+    }
     if (!target_task) {
         return -ESRCH;  // No such process
     }
 
     // Check the target process's clearance
-    if (target_task.clearance & required_bit) {
+    if (target_task->clearance & required_bit) {
         return 1;  // Target process has the clearance
     } else {
         return 0;  // Target process does not have the clearance
     }
+    return 0;
 }
 
 
-long set_sec_branch(int height, char clr) {
+long sys_set_sec_branch(int height, char clr) {
     struct task_struct *parent_task = current->parent;
     int required_bit;
     int updated_count = 0;
@@ -110,13 +118,13 @@ long set_sec_branch(int height, char clr) {
     switch (clr) {
         case 's':
             required_bit = 1;  // Bit 0 for Sword
-            break;
+        break;
         case 'm':
             required_bit = 1 << 1;  // Bit 1 for Midnight
-            break;
+        break;
         case 'c':
             required_bit = 1 << 2;  // Bit 2 for Clamp
-            break;
+        break;
         default:
             return -EINVAL;  // Redundant check for safety
     }
@@ -127,18 +135,17 @@ long set_sec_branch(int height, char clr) {
     }
 
     // Traverse up the parent hierarchy up to `height`
-    rcu_read_lock();
     while (parent_task != NULL && height > 0) {
         // Update the parent's clearance if the bit is not already set
         if (!(parent_task->clearance & required_bit)) {
             parent_task->clearance |= required_bit;
             updated_count++;
         }
+
         // Move to the next parent
         parent_task = parent_task->parent;
         height--;
     }
-    rcu_read_unlock();
 
     return updated_count;  // Return the number of parents updated
 }

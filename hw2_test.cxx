@@ -11,12 +11,11 @@ long get_sec(char clr) {
 }
 
 long check_sec(pid_t pid, char clr) {
-	long r = syscall(336, pid, clr);
+    long r = syscall(336, pid, clr);
     return r;
 }
 
 long set_sec_branch(int height, char clr) {
-	long r = syscall(337, height, clr);
+    long r = syscall(337, height, clr);
     return r;
 }
-

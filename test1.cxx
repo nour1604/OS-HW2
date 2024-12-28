@@ -7,6 +7,7 @@ using namespace std;
 
 int main() {
     long x = get_sec('m');
+
 	cout << "initial 'midnight' clearance: " << x << endl;
 	assert(x == 0);
 	
